@@ -1,0 +1,55 @@
+# Define the services/containers to be run
+services:
+  # main web application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    environment:
+      RAILS_LOG_TO_STDOUT: true
+      LANG: en_US.UTF-8
+      LC_CTYPE: en_US.UTF-8
+    env_file:
+      - .env
+    tty: true # for binding.pry
+    stdin_open: true # for binding.pry
+    volumes:
+      - app-storage:/rails/storage
+      - .:/rails:cached #mapping local folder to container
+      - app-bundle:/rails/vendor/bundle
+      - ./node_modules:/rails/node_modules
+    command: bash -c "rm -rf tmp/pids/server.pid && bin/dev"
+    entrypoint: bin/docker-entrypoint
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQLD_CONFIG: "log_queries_not_using_indexes=1"
+    volumes:
+      - db-storage:/var/lib/mysql
+    ports:
+      - "3307:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --log_queries_not_using_indexes=1 # log request without indexes
+      - --slow_query_log=1 # enable slow query log
+      - --long_query_time=2 # log request that take more than 2 seconds
+      - --slow_query_log_file=/var/lib/mysql/slow-query.log # log file
+
+  redis:
+    image: 'redis:7.2.5-alpine'
+    command: redis-server
+    ports:
+      - "6380:6379"
+
+volumes:
+  app-storage:
+  db-storage:
+  app-bundle:

@@ -34,7 +34,7 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 gem "bootsnap", require: false
 gem "faraday", "~> 2.12.0"
 gem "sidekiq", "~> 7.3.1"
-gem "sidekiq-cron", "~>1.12.0"
+gem "sidekiq-cron", "~>2.3.0"
 gem "sidekiq-failures", "~> 1.0.4"
 gem "slim", ">= 5.2.1"
 

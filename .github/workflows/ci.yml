@@ -48,4 +48,4 @@ jobs:
         env:
           RAILS_ENV: test
           DATABASE_URL: mysql2://127.0.0.1:3306
-        run: bin/rspec
+        run: bundle exec rspec

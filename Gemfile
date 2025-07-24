@@ -33,7 +33,7 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
 gem "faraday", "~> 2.12.0"
-gem "sidekiq", "~> 7.3.1"
+gem "sidekiq", "~> 8.0.6"
 gem "sidekiq-cron", "~>1.12.0"
 gem "sidekiq-failures", "~> 1.0.4"
 gem "slim", ">= 5.2.1"

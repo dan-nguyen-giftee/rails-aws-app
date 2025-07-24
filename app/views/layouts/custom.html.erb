@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Custom View - Aws Learning</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="A custom layout for Aws Learning">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <link rel="icon" href="/icon.png" type="image/png">
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+  <body style="background: #f8fafc; font-family: 'Segoe UI', Arial, sans-serif;">
+    <header style="background: #2563eb; color: white; padding: 1rem;">
+      <h1>Welcome to Aws Learning - Custom View</h1>
+    </header>
+    <main style="margin: 2rem;">
+      <%= yield %>
+    </main>
+    <footer style="background: #e5e7eb; color: #374151; padding: 1rem; text-align: center;">
+      &copy; 2025 Aws Learning
+    </footer>
+  </body>
+</html>

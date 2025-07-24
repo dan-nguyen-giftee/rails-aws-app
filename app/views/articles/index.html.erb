@@ -1,0 +1,12 @@
+<h2>Articles</h2>
+<ul>
+  <% @articles.each do |article| %>
+    <li>
+      <strong><%= article.title %></strong><br>
+      <%= article.body %><br>
+      <%= link_to "Edit", edit_article_path(article) %>
+    </li>
+  <% end %>
+</ul>
+
+<%= link_to "Add New Article", new_article_path, class: "button" %>

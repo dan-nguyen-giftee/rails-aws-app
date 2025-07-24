@@ -32,6 +32,11 @@ gem "tzinfo-data", platforms: %i[ windows jruby ]
 
 # Reduces boot times through caching; required in config/boot.rb
 gem "bootsnap", require: false
+gem "faraday", "~> 2.12.0"
+gem "sidekiq", "~> 7.3.1"
+gem "sidekiq-cron", "~>1.12.0"
+gem "sidekiq-failures", "~> 1.0.4"
+gem "slim", ">= 5.2.1"
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
@@ -45,6 +50,10 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+  gem "bullet", ">= 7.1.6"
+  gem "faker", ">= 3.4.1" # Unit test
+  gem "rspec-rails", "~> 7.0.1" # Unit test
+  gem "webmock", "~> 3.23", ">= 3.23.1" # Unit test
 end
 
 group :development do

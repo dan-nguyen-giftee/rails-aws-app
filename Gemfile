@@ -52,7 +52,7 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
   gem "bullet", ">= 7.1.6"
   gem "faker", ">= 3.4.1" # Unit test
-  gem "rspec-rails", "~> 7.0.1" # Unit test
+  gem "rspec-rails", "~> 8.0.1" # Unit test
   gem "webmock", "~> 3.23", ">= 3.23.1" # Unit test
 end
 

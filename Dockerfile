@@ -8,6 +8,9 @@
 ARG RUBY_VERSION=3.2.2
 FROM --platform=linux/x86_64 docker.io/library/ruby:$RUBY_VERSION-slim AS base
 
+COPY bin/docker-entrypoint /usr/bin/docker-entrypoint
+RUN chmod +x /usr/bin/docker-entrypoint
+
 # Rails app lives here
 WORKDIR /rails
 
@@ -77,3 +80,7 @@ USER 1000:1000
 
 # Start the server by default, this can be overwritten at runtime
 EXPOSE 3000
+
+# Set the entrypoint to our script and the default command to start the server
+ENTRYPOINT ["/usr/bin/docker-entrypoint"]
+CMD ["./bin/rails", "server", "-b", "0.0.0.0"]

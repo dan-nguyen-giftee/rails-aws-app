@@ -52,7 +52,14 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
-  <<: *default
-  database: aws_learning_production
-  username: aws_learning
-  password: <%= ENV["AWS_LEARNING_DATABASE_PASSWORD"] %>
+  # Use DATABASE_URL if provided (recommended for containers)
+  url: <%= ENV["DATABASE_URL"] %>
+  # Fallback to individual configuration if DATABASE_URL is not set
+  adapter: mysql2
+  encoding: utf8mb4
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  database: <%= ENV.fetch("DB_NAME", "rails_production") %>
+  username: <%= ENV.fetch("DB_USERNAME", "admin") %>
+  password: <%= ENV["DB_PASSWORD"] %>
+  host: <%= ENV["DB_HOST"] %>
+  port: <%= ENV.fetch("DB_PORT", "3306") %>

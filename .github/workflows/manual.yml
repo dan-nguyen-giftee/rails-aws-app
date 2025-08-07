@@ -1,0 +1,173 @@
+name: Manual Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+        - deploy
+        - rollback
+        - restart
+        - scale
+      image_tag:
+        description: 'Docker image tag (for deploy/rollback)'
+        required: false
+        default: 'latest'
+      desired_count:
+        description: 'Desired task count (for scaling)'
+        required: false
+        default: '1'
+
+env:
+  AWS_REGION: ap-northeast-1
+  AWS_ACCOUNT_ID: "569476542657"
+  ECR_REPOSITORY: rails-app
+  ECS_SERVICE: rails-app-production-service
+  ECS_CLUSTER: rails-app-production-cluster
+  ECS_TASK_DEFINITION: rails-app-production-rails
+  CONTAINER_NAME: rails-app
+
+permissions:
+  contents: read
+  id-token: write  # Required for OIDC
+
+jobs:
+  manual-deploy:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'deploy'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
+        role-session-name: manual-deploy-session
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Deploy specific image
+      run: |
+        ECR_REGISTRY=${{ steps.login-ecr.outputs.registry }}
+        IMAGE_TAG=${{ github.event.inputs.image_tag }}
+        
+        echo "🚀 Manual deployment of image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        
+        # Download current task definition
+        aws ecs describe-task-definition \
+          --task-definition $ECS_TASK_DEFINITION \
+          --query taskDefinition > task-definition.json
+        
+        # Update image in task definition
+        jq --arg IMAGE "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+           '.containerDefinitions[0].image = $IMAGE' \
+           task-definition.json > updated-task-definition.json
+        
+        # Register new task definition
+        aws ecs register-task-definition \
+          --cli-input-json file://updated-task-definition.json
+        
+        # Update service
+        aws ecs update-service \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_SERVICE \
+          --task-definition $ECS_TASK_DEFINITION
+        
+        echo "✅ Manual deployment initiated"
+
+  rollback:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'rollback'
+    environment: production
+    
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
+        role-session-name: manual-rollback-session
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Rollback to previous version
+      run: |
+        echo "🔄 Rolling back to previous task definition..."
+        
+        # Get current task definition revision
+        CURRENT_REVISION=$(aws ecs describe-services \
+          --cluster $ECS_CLUSTER \
+          --services $ECS_SERVICE \
+          --query 'services[0].taskDefinition' \
+          --output text | grep -o '[0-9]*$')
+        
+        PREVIOUS_REVISION=$((CURRENT_REVISION - 1))
+        
+        echo "Current revision: $CURRENT_REVISION"
+        echo "Rolling back to revision: $PREVIOUS_REVISION"
+        
+        # Update service to previous revision
+        aws ecs update-service \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_SERVICE \
+          --task-definition "$ECS_TASK_DEFINITION:$PREVIOUS_REVISION"
+        
+        echo "✅ Rollback initiated to revision $PREVIOUS_REVISION"
+
+  restart:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'restart'
+    environment: production
+    
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
+        role-session-name: manual-restart-session
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Restart service
+      run: |
+        echo "🔄 Restarting ECS service..."
+        
+        aws ecs update-service \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_SERVICE \
+          --force-new-deployment
+        
+        echo "✅ Service restart initiated"
+
+  scale:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.action == 'scale'
+    environment: production
+    
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/GitHubActionsRole
+        role-session-name: manual-scale-session
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Scale service
+      run: |
+        DESIRED_COUNT=${{ github.event.inputs.desired_count }}
+        
+        echo "📊 Scaling service to $DESIRED_COUNT tasks..."
+        
+        aws ecs update-service \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_SERVICE \
+          --desired-count $DESIRED_COUNT
+        
+        echo "✅ Service scaling initiated to $DESIRED_COUNT tasks"
